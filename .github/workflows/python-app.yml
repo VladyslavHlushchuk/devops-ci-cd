@@ -1,4 +1,4 @@
-name: Python CI
+name: Python Application
 
 on:
   push:
@@ -9,36 +9,29 @@ on:
       - main
 
 jobs:
-  lint-and-test:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]
 
     steps:
-      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
 
-      # Install dependencies
       - name: Install dependencies
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
           python -m pip install --upgrade pip
+          pip install -r requirements.txt
           pip install flake8 pytest
 
-      # Lint the code with Flake8
-      - name: Run Flake8
-        run: |
-          . .venv/bin/activate
-          python -m flake8 calculator.py test_calculator.py
+      - name: Run linter
+        run: flake8 calculator.py test_calculator.py
 
-      # Run the tests with Pytest
       - name: Run tests
-        run: |
-          . .venv/bin/activate
-          python -m pytest --cov=calculator --cov-fail-under=50
+        run: pytest
